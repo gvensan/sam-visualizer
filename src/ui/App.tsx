@@ -159,13 +159,31 @@ export function App() {
     replayRef.current = runReplay(bus, {
       onCaughtUp: () => setCaughtUp(true),
       onDone: () => {
-        setReplaying(false);
-        replayRef.current = null;
-        // Leave the caught-up badge on briefly so the viewer notices the
-        // transition; clear it after a short fade.
-        window.setTimeout(() => setCaughtUp(false), 1800);
+        // Hold the "Caught up" indicator briefly so the auto-switch back to
+        // live mode is visible — otherwise React batches setCaughtUp(true)
+        // and setReplaying(false) and the button skips the badge entirely.
+        window.setTimeout(() => {
+          setReplaying(false);
+          setCaughtUp(false);
+          replayRef.current = null;
+        }, 900);
       },
     });
+  };
+
+  /** Toggle: start a replay if one isn't running, stop the current one if
+   * it is. The same Timeline button drives both — it morphs between
+   * "Replay" (idle) and "Replaying / Caught up" (in flight) based on the
+   * current state, so its action always matches what's on screen. */
+  const toggleReplay = () => {
+    if (!replaying) {
+      startReplay();
+      return;
+    }
+    replayRef.current?.stop();
+    replayRef.current = null;
+    setReplaying(false);
+    setCaughtUp(false);
   };
 
   const startSim = () => {
@@ -309,6 +327,7 @@ export function App() {
               agentTtlMs={settings.agentTtlMs}
               speed={speed}
               paused={paused}
+              showDiscovery={showDiscovery}
               selectedId={selected?.id ?? null}
               onSelectNode={(n) => setSelected(n)}
               spotlightTask={spotlightTask}
@@ -331,7 +350,7 @@ export function App() {
               onClear={clearAll}
               onRewind={mode === "sim" ? rewind : undefined}
               rewindEnabled={mode === "sim"}
-              onReplay={mode === "live" ? startReplay : undefined}
+              onReplay={mode === "live" ? toggleReplay : undefined}
               // Timeline derives the live "has history" predicate itself; App
               // only knows whether the user is in live mode (a non-bus signal).
               replayEnabled={mode === "live"}

@@ -312,7 +312,7 @@ function roundedSteps(pts) {
     out.push(`L ${last.x},${last.y}`);
     return out.join(" ");
 }
-export function Canvas({ bus, animations, renderMode, theme, showLabels, agentTtlMs, speed, paused, onSelectNode, selectedId, spotlightTask }) {
+export function Canvas({ bus, animations, renderMode, theme, showLabels, agentTtlMs, speed, paused, showDiscovery, onSelectNode, selectedId, spotlightTask }) {
     const svgRef = useRef(null);
     const activeRef = useRef(new Map());
     const zoomRef = useRef(null);
@@ -366,6 +366,11 @@ export function Canvas({ bus, animations, renderMode, theme, showLabels, agentTt
     // Live-readable paused flag for the bus listener that closes over it.
     const pausedRef = useRef(paused);
     pausedRef.current = paused;
+    // Live-readable discovery toggle — same pattern, so toggling the checkbox
+    // in the Timeline header takes effect on the very next discovery event
+    // without re-subscribing the listener.
+    const showDiscoveryRef = useRef(showDiscovery);
+    showDiscoveryRef.current = showDiscovery;
     // Catch-up runner installed by the bus listener effect — calling it pushes
     // missed events through the queue at the catch-up multiplier.
     const catchupRunnerRef = useRef(null);
@@ -581,6 +586,12 @@ export function Canvas({ bus, animations, renderMode, theme, showLabels, agentTt
     // interaction clearly even when events fire back-to-back.
     useEffect(() => {
         const dispatch = (event) => {
+            // Honor the Timeline's Discovery toggle on the canvas too — the agent
+            // state was already applied by registries.applyEvent before this
+            // listener runs, so suppressing the ripple here doesn't lose any
+            // information; the node simply appears without the heartbeat pulse.
+            if (event.kind === "discovery" && !showDiscoveryRef.current)
+                return;
             const seq = event.seq;
             const runHeartbeatWork = async () => {
                 const card = extractAgentCard(event.payload);

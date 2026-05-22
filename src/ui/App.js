@@ -152,13 +152,30 @@ export function App() {
         replayRef.current = runReplay(bus, {
             onCaughtUp: () => setCaughtUp(true),
             onDone: () => {
-                setReplaying(false);
-                replayRef.current = null;
-                // Leave the caught-up badge on briefly so the viewer notices the
-                // transition; clear it after a short fade.
-                window.setTimeout(() => setCaughtUp(false), 1800);
+                // Hold the "Caught up" indicator briefly so the auto-switch back to
+                // live mode is visible — otherwise React batches setCaughtUp(true)
+                // and setReplaying(false) and the button skips the badge entirely.
+                window.setTimeout(() => {
+                    setReplaying(false);
+                    setCaughtUp(false);
+                    replayRef.current = null;
+                }, 900);
             },
         });
+    };
+    /** Toggle: start a replay if one isn't running, stop the current one if
+     * it is. The same Timeline button drives both — it morphs between
+     * "Replay" (idle) and "Replaying / Caught up" (in flight) based on the
+     * current state, so its action always matches what's on screen. */
+    const toggleReplay = () => {
+        if (!replaying) {
+            startReplay();
+            return;
+        }
+        replayRef.current?.stop();
+        replayRef.current = null;
+        setReplaying(false);
+        setCaughtUp(false);
     };
     const startSim = () => {
         simHandleRef.current?.stop();
@@ -255,7 +272,7 @@ export function App() {
                     // Always exit pause when leaving live mode — pause has no meaning in sim.
                     setPaused(false);
                     setMode(m);
-                }, scenarioId: scenarioId, setScenarioId: setScenarioId, running: running, onStart: startSim, onStop: stopSim, speed: speed, speedPos: speedPos, setSpeedPos: setSpeedPos, loop: loop, setLoop: setLoop, onOpenConnect: () => setShowConfig(true), liveStatus: liveStatus, renderMode: renderMode, setRenderMode: setRenderMode, showBottomPanel: settings.showBottomPanel, toggleBottomPanel: () => setSettings({ ...settings, showBottomPanel: !settings.showBottomPanel }), showTimeline: settings.showTimeline, toggleTimeline: () => setSettings({ ...settings, showTimeline: !settings.showTimeline }), paused: paused, onLiveStart: handleLiveStart, onLivePauseResume: handleLivePauseResume, onLiveStop: handleLiveStop, onOpenSettings: () => setShowSettings(true) }), _jsxs("main", { style: mainGrid(settings.showTimeline), children: [_jsxs("section", { style: canvasColumn, children: [_jsxs("div", { style: canvasArea, children: [_jsx(Canvas, { bus: bus, animations: animations, renderMode: renderMode, theme: theme, showLabels: settings.showLabels, agentTtlMs: settings.agentTtlMs, speed: speed, paused: paused, selectedId: selected?.id ?? null, onSelectNode: (n) => setSelected(n), spotlightTask: spotlightTask }), _jsx(DetailPanel, { bus: bus, selected: selected, onClose: () => setSelected(null) }), settings.showLegend && _jsx(Legend, {}), paused && _jsx(PausedBanner, {})] }), settings.showBottomPanel && (_jsx("div", { style: bottomPanelWrap, children: _jsx(NarrationPanel, { bus: bus, animations: animations, speed: speed }) }))] }), settings.showTimeline && (_jsx("aside", { style: timelineWrap, children: _jsx(Timeline, { bus: bus, animations: animations, onClear: clearAll, onRewind: mode === "sim" ? rewind : undefined, rewindEnabled: mode === "sim", onReplay: mode === "live" ? startReplay : undefined, 
+                }, scenarioId: scenarioId, setScenarioId: setScenarioId, running: running, onStart: startSim, onStop: stopSim, speed: speed, speedPos: speedPos, setSpeedPos: setSpeedPos, loop: loop, setLoop: setLoop, onOpenConnect: () => setShowConfig(true), liveStatus: liveStatus, renderMode: renderMode, setRenderMode: setRenderMode, showBottomPanel: settings.showBottomPanel, toggleBottomPanel: () => setSettings({ ...settings, showBottomPanel: !settings.showBottomPanel }), showTimeline: settings.showTimeline, toggleTimeline: () => setSettings({ ...settings, showTimeline: !settings.showTimeline }), paused: paused, onLiveStart: handleLiveStart, onLivePauseResume: handleLivePauseResume, onLiveStop: handleLiveStop, onOpenSettings: () => setShowSettings(true) }), _jsxs("main", { style: mainGrid(settings.showTimeline), children: [_jsxs("section", { style: canvasColumn, children: [_jsxs("div", { style: canvasArea, children: [_jsx(Canvas, { bus: bus, animations: animations, renderMode: renderMode, theme: theme, showLabels: settings.showLabels, agentTtlMs: settings.agentTtlMs, speed: speed, paused: paused, showDiscovery: showDiscovery, selectedId: selected?.id ?? null, onSelectNode: (n) => setSelected(n), spotlightTask: spotlightTask }), _jsx(DetailPanel, { bus: bus, selected: selected, onClose: () => setSelected(null) }), settings.showLegend && _jsx(Legend, {}), paused && _jsx(PausedBanner, {})] }), settings.showBottomPanel && (_jsx("div", { style: bottomPanelWrap, children: _jsx(NarrationPanel, { bus: bus, animations: animations, speed: speed }) }))] }), settings.showTimeline && (_jsx("aside", { style: timelineWrap, children: _jsx(Timeline, { bus: bus, animations: animations, onClear: clearAll, onRewind: mode === "sim" ? rewind : undefined, rewindEnabled: mode === "sim", onReplay: mode === "live" ? toggleReplay : undefined, 
                             // Timeline derives the live "has history" predicate itself; App
                             // only knows whether the user is in live mode (a non-bus signal).
                             replayEnabled: mode === "live", replaying: replaying, caughtUp: caughtUp, showDiscovery: showDiscovery, setShowDiscovery: setShowDiscovery, spotlightTask: spotlightTask, onSpotlight: setSpotlightTask }) }))] }), showConfig && (_jsx(ConfigPanel, { initial: brokerCfg, onConnect: handleConnect, onCancel: () => setShowConfig(false) })), showSettings && (_jsx(SettingsDialog, { settings: settings, onChange: setSettings, onReset: () => setSettings({ ...DEFAULT_SETTINGS }), onClose: () => setShowSettings(false) }))] }));

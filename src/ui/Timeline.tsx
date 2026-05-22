@@ -142,20 +142,32 @@ export function Timeline({
           Discovery
         </label>
         <div style={spacer} />
-        {replaying && (
-          <span style={caughtUp ? caughtUpBadge : replayBadge}>
-            {caughtUp ? "● caught up" : "● replaying"}
-          </span>
-        )}
         {onReplay && (
-          <button
-            style={btn(liveReplayEnabled && !replaying)}
-            onClick={onReplay}
-            disabled={!liveReplayEnabled || replaying}
-            title="Replay the captured event history from the beginning"
-          >
-            Replay
-          </button>
+          replaying ? (
+            // While a replay is in progress the same button morphs into a
+            // STOP control. Clicking it cancels the replay and live events
+            // resume animating on the canvas. The text label doubles as
+            // the "● replaying"/"● caught up" status indicator.
+            <button
+              style={replayActiveBtn(caughtUp)}
+              onClick={onReplay}
+              title="Stop replay and resume live rendering"
+            >
+              <StopIcon />
+              <span style={{ marginLeft: 6 }}>
+                {caughtUp ? "Caught up" : "Replaying"}
+              </span>
+            </button>
+          ) : (
+            <button
+              style={btn(liveReplayEnabled)}
+              onClick={onReplay}
+              disabled={!liveReplayEnabled}
+              title="Replay the captured event history from the beginning"
+            >
+              Replay
+            </button>
+          )
         )}
         {onRewind && (
           <button
@@ -169,12 +181,13 @@ export function Timeline({
         )}
         {onClear && (
           <button
-            style={btn(total > 0)}
+            style={iconBtn(total > 0)}
             onClick={onClear}
             disabled={total === 0}
             title="Clear events and reset the canvas"
+            aria-label="Clear events"
           >
-            Clear
+            <TrashIcon />
           </button>
         )}
       </div>
@@ -224,6 +237,36 @@ export function Timeline({
   );
 }
 
+function StopIcon() {
+  return (
+    <svg width={9} height={9} viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+      <rect x="3" y="3" width="10" height="10" rx="1.5" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      width={12}
+      height={12}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M2.5 4.5h11" />
+      <path d="M6.5 4.5V3a1 1 0 011-1h1a1 1 0 011 1v1.5" />
+      <path d="M4.2 4.5l.5 8.5a1.4 1.4 0 001.4 1.3h3.8a1.4 1.4 0 001.4-1.3l.5-8.5" />
+      <path d="M6.7 7.5v4.2" />
+      <path d="M9.3 7.5v4.2" />
+    </svg>
+  );
+}
+
 const wrap: preact.JSX.CSSProperties = {
   background: "var(--bg-panel)",
   border: "1px solid var(--border)",
@@ -269,19 +312,26 @@ const checkbox: preact.JSX.CSSProperties = {
   whiteSpace: "nowrap",
 };
 
-const replayBadge: preact.JSX.CSSProperties = {
-  color: "var(--accent-amber)",
-  letterSpacing: 1,
-  fontSize: 11,
-  textTransform: "uppercase",
-};
-
-const caughtUpBadge: preact.JSX.CSSProperties = {
-  color: "var(--accent-teal)",
-  letterSpacing: 1,
-  fontSize: 11,
-  textTransform: "uppercase",
-};
+/** Style for the Replay button while a replay is in flight. The same
+ * button serves as the stop control AND the status indicator (Replaying
+ * vs Caught up), so its colour reflects the phase. */
+function replayActiveBtn(caughtUp: boolean): preact.JSX.CSSProperties {
+  const accent = caughtUp ? "var(--accent-teal)" : "var(--accent-amber)";
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    background: "transparent",
+    color: accent,
+    border: `1px solid ${accent}`,
+    borderRadius: 6,
+    padding: "3px 9px",
+    fontSize: 11,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    cursor: "pointer",
+    fontFamily: "inherit",
+  };
+}
 
 const list: preact.JSX.CSSProperties = {
   flex: 1,
@@ -337,5 +387,24 @@ function btn(enabled: boolean): preact.JSX.CSSProperties {
     letterSpacing: 1,
     cursor: enabled ? "pointer" : "not-allowed",
     fontFamily: "inherit",
+  };
+}
+
+/** Compact icon-only variant of `btn`. Used for Clear so the header doesn't
+ * overflow when Replay/Rewind are also present. */
+function iconBtn(enabled: boolean): preact.JSX.CSSProperties {
+  return {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 24,
+    height: 24,
+    background: "transparent",
+    color: enabled ? "var(--text-primary)" : "var(--text-dim)",
+    border: `1px solid ${enabled ? "var(--border)" : "var(--border-subtle)"}`,
+    borderRadius: 6,
+    padding: 0,
+    cursor: enabled ? "pointer" : "not-allowed",
+    flexShrink: 0,
   };
 }
