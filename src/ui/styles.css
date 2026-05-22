@@ -1,0 +1,60 @@
+@keyframes flashRow {
+  0%   { background-color: rgba(0, 200, 149, 0.22); }
+  60%  { background-color: rgba(0, 200, 149, 0.10); }
+  100% { background-color: transparent; }
+}
+
+.timeline-row {
+  position: relative;
+  transition: background-color 250ms ease-out, box-shadow 250ms ease-out;
+}
+
+/* One-shot pulse when the row first arrives in the list. */
+.timeline-row-fresh {
+  animation: flashRow 1.4s ease-out;
+}
+
+/* Persistent indicator while the row's particle is in flight on the canvas. */
+.timeline-row-playing {
+  background-color: rgba(0, 200, 149, 0.08);
+  box-shadow: inset 3px 0 0 #00C895;
+}
+
+@keyframes narratorIn {
+  from { opacity: 0; transform: translate(-50%, 8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* The narrator panel mounts a fresh element per event (keyed by seq), so
+   this animation re-triggers naturally on every new caption. */
+.narrator-enter {
+  animation: narratorIn 260ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes narrationCardIn {
+  /* New cards arrive at the bottom of the stack, so they slide up into
+     place rather than dropping in from above. */
+  from { opacity: 0; transform: translateY(8px); max-height: 0; }
+  to   { opacity: 1; transform: translateY(0); max-height: 320px; }
+}
+
+.narration-card-enter {
+  animation: narrationCardIn 220ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+@keyframes narrationTtlDrain {
+  from { width: 100%; }
+  to   { width: 0%; }
+}
+
+/* Single source of truth for the visual countdown. CSS keyframe duration
+   matches the JS TTL (8s); animation-play-state freezes it in sync with the
+   JS pause logic, so the bar never drifts from the actual removal timer. */
+.narration-ttl-fill {
+  height: 100%;
+  width: 100%;
+  animation: narrationTtlDrain 8000ms linear forwards;
+}
+.narration-ttl-fill[data-paused="true"] {
+  animation-play-state: paused;
+}
