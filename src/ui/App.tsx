@@ -16,6 +16,7 @@ import { SettingsDialog, DEFAULT_SETTINGS, type VisualSettings } from "./Setting
 import { runReplay, type ReplayHandle } from "../sim/replay";
 import {
   connectBroker,
+  DEFAULT_BROKER_CONFIG,
   type BrokerConfig,
   type BrokerHandle,
   type ConnectionStatus,
@@ -67,14 +68,7 @@ const defaultBrokerCfg = (): BrokerConfig => {
     const raw = localStorage.getItem(CFG_KEY);
     if (raw) return JSON.parse(raw) as BrokerConfig;
   } catch { /* ignore */ }
-  return {
-    url: "ws://localhost:8008",
-    vpnName: "default",
-    userName: "",
-    password: "",
-    namespace: "default",
-    subscribeFeedback: false,
-  };
+  return { ...DEFAULT_BROKER_CONFIG };
 };
 
 export function App() {

@@ -11,6 +11,17 @@ export interface BrokerConfig {
   subscribeFeedback?: boolean;
 }
 
+/** Default broker config used when no saved settings exist and as the
+ * target for the "Reset to defaults" button in ConfigPanel. */
+export const DEFAULT_BROKER_CONFIG: BrokerConfig = {
+  url: "ws://localhost:8008",
+  vpnName: "default",
+  userName: "",
+  password: "",
+  namespace: "default",
+  subscribeFeedback: false,
+};
+
 export type ConnectionStatus =
   | "disconnected"
   | "connecting"

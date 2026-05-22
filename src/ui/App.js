@@ -15,7 +15,7 @@ import { ConfigPanel } from "./ConfigPanel";
 import { NarrationPanel } from "./NarrationPanel";
 import { SettingsDialog, DEFAULT_SETTINGS } from "./SettingsDialog";
 import { runReplay } from "../sim/replay";
-import { connectBroker, } from "../broker/solaceClient";
+import { connectBroker, DEFAULT_BROKER_CONFIG, } from "../broker/solaceClient";
 const CFG_KEY = "sam-viz.broker-cfg";
 const RENDER_KEY = "sam-viz.render-mode";
 const DISCOVERY_KEY = "sam-viz.show-discovery";
@@ -64,14 +64,7 @@ const defaultBrokerCfg = () => {
             return JSON.parse(raw);
     }
     catch { /* ignore */ }
-    return {
-        url: "ws://localhost:8008",
-        vpnName: "default",
-        userName: "",
-        password: "",
-        namespace: "default",
-        subscribeFeedback: false,
-    };
+    return { ...DEFAULT_BROKER_CONFIG };
 };
 export function App() {
     const [settings, setSettings] = useState(loadSettings);

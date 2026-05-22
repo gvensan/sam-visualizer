@@ -1,5 +1,5 @@
 import { useState } from "preact/hooks";
-import type { BrokerConfig } from "../broker/solaceClient";
+import { DEFAULT_BROKER_CONFIG, type BrokerConfig } from "../broker/solaceClient";
 
 interface Props {
   initial: BrokerConfig;
@@ -53,6 +53,14 @@ export function ConfigPanel({ initial, onConnect, onCancel }: Props) {
           </Field>
         </div>
         <div style={footer}>
+          <button
+            style={ghost}
+            onClick={() => setCfg({ ...DEFAULT_BROKER_CONFIG })}
+            title="Restore the default broker URL, VPN, and namespace"
+          >
+            Reset
+          </button>
+          <div style={{ flex: 1 }} />
           <button style={ghost} onClick={onCancel}>Cancel</button>
           <button style={primary} onClick={() => onConnect(cfg)}>Connect</button>
         </div>
